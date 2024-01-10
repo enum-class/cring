@@ -42,3 +42,8 @@ endif()
 if (CRING_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+add_custom_target(
+    clang-tidy-check clang-tidy -p ${CMAKE_BINARY_DIR}/compile_commands.json -checks=cert* --warnings-as-errors=* -header-filter=.* ${SOURCE_FILES}
+    DEPENDS ${SOURCE_FILES}
+)

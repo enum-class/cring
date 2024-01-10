@@ -2,7 +2,8 @@
 
 #include <string.h>
 
-void init_io_context(struct IOContext* ioc) {
+void init_io_context(struct IOContext *ioc)
+{
     memset(ioc, 0, sizeof(*ioc));
     ioc->capacity = 1024;
     ioc->tail = 1023;
@@ -14,8 +15,9 @@ void init_io_context(struct IOContext* ioc) {
     io_uring_queue_init_params(1024, &ioc->ring, &params);
 }
 
-int request_accept(struct IOContext* ioc, int fd, accept_cb cb, void* data) {
-    struct Token* token = get_token(ioc);
+int request_accept(struct IOContext *ioc, int fd, accept_cb cb, void *data)
+{
+    struct Token *token = get_token(ioc);
     if (unlikely(token == NULL))
         return -1;
 
@@ -30,12 +32,14 @@ int request_accept(struct IOContext* ioc, int fd, accept_cb cb, void* data) {
     token->fd = fd;
     token->cb = (Cb)cb;
     token->data = data;
-    io_uring_sqe_set_data(sqe, (void*)token);
+    io_uring_sqe_set_data(sqe, (void *)token);
     return 1;
 }
 
-int request_read(struct IOContext* ioc, int fd, void* buffer, size_t size, read_cb cb, void* data) {
-    struct Token* token = get_token(ioc);
+int request_read(struct IOContext *ioc, int fd, void *buffer, size_t size,
+                 read_cb cb, void *data)
+{
+    struct Token *token = get_token(ioc);
     if (unlikely(token == NULL))
         return -1;
 
@@ -50,12 +54,14 @@ int request_read(struct IOContext* ioc, int fd, void* buffer, size_t size, read_
     token->fd = fd;
     token->cb = (Cb)cb;
     token->data = data;
-    io_uring_sqe_set_data(sqe, (void*)token);
+    io_uring_sqe_set_data(sqe, (void *)token);
     return 1;
 }
 
-int request_write(struct IOContext* ioc, int fd, void* buffer, size_t size, write_cb cb, void* data) {
-    struct Token* token = get_token(ioc);
+int request_write(struct IOContext *ioc, int fd, void *buffer, size_t size,
+                  write_cb cb, void *data)
+{
+    struct Token *token = get_token(ioc);
     if (unlikely(token == NULL))
         return -1;
 
@@ -70,12 +76,13 @@ int request_write(struct IOContext* ioc, int fd, void* buffer, size_t size, writ
     token->fd = fd;
     token->cb = (Cb)cb;
     token->data = data;
-    io_uring_sqe_set_data(sqe, (void*)token);
+    io_uring_sqe_set_data(sqe, (void *)token);
     return 1;
 }
 
-int process(struct IOContext* ioc, size_t batch) {
-    static struct io_uring_cqe* cqes[1024];
+int process(struct IOContext *ioc, size_t batch)
+{
+    static struct io_uring_cqe *cqes[1024];
     if (!batch)
         return batch;
 
@@ -95,16 +102,14 @@ int process(struct IOContext* ioc, size_t batch) {
 
     for (int i = 0; i < count; ++i) {
         cqe = cqes[i];
-        struct Token* token = (struct Token*)cqe->user_data;
+        struct Token *token = (struct Token *)cqe->user_data;
         if (token->type == ACCEPT) {
             ((accept_cb)token->cb)(cqe->res, token->data);
             release_token(ioc, token);
-        }
-        else if (token->type == READ) {
+        } else if (token->type == READ) {
             ((read_cb)token->cb)(cqe->res, token->data);
             release_token(ioc, token);
-        }
-        else if (token->type == WRITE) {
+        } else if (token->type == WRITE) {
             ((write_cb)token->cb)(cqe->res, token->data);
             release_token(ioc, token);
         }

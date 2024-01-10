@@ -8,7 +8,8 @@ extern "C" {
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int setup_listen(const char* addr, int port) {
+int setup_listen(const char *addr, int port)
+{
     int enable = 1;
     int sock = socket(PF_INET, SOCK_STREAM, 0);
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
@@ -28,4 +29,3 @@ int setup_listen(const char* addr, int port) {
 #endif
 
 #endif
-
