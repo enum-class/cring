@@ -5,106 +5,90 @@
 extern "C" {
 #endif
 
-#define SIGSTKSZ 8192;
+#include <ucontext.h>
+
+#include "IOContext.h"
+
+#define STACK 8192
 
 struct Frame {
     ucontext_t exe;
-    size_t result;
+    ssize_t result;
     int is_ready;
-    uint8_t stack[SIGSTKSZ]
+    uint8_t stack[STACK];
 };
 
 struct Executor {
     struct IOContext ioc;
     size_t size;
+    size_t capacity;
     size_t current;
-    const Frame* frames[10];
+    struct Frame* frames[10];
 };
 
-Frame* get_current_frame(const Executor* executor) {
+typedef void (*Func)(struct Executor*, void*);
+
+static inline struct Frame* get_current_frame(struct Executor* executor) {
     return executor->frames[executor->current];
 }
 
-Frame* move_to_next_ready_frame(Executor* executor) {
-    Frame* fram = NULL;
+static inline struct Frame* main_frame(struct Executor* executor) {
+    return executor->frames[0];
+}
+
+static inline struct Frame* move_to_next_ready_frame(struct Executor* executor) {
+    struct Frame* frame = NULL;
 
     do {
-        executor->current = (++executor->current) % size;
-        frame = get_current_frame();
-    } while (!frame->is_ready)
+        executor->current = (++executor->current) % executor->size;
+        frame = get_current_frame(executor);
+    } while (!frame->is_ready);
 
     return frame;
 }
 
-void read_cb(size_t length, int error, void* data) {
-    Frame* frame = (Frame*)data;
-    frame->result = error < 0 ? error : length;
-    frame->is_ready = true;
+static inline void wait(struct Executor* executor) {
+    struct Frame* current = get_current_frame(executor);
+    current->is_ready = 0;
+    struct Frame* next = move_to_next_ready_frame(executor);
+    swapcontext(&current->exe, &next->exe);
 }
 
-void write_cb(size_t length, int error, void* data) {
-    Frame* frame = (Frame*)data;
-    frame->result = error < 0 ? error : length;
-    frame->is_ready = true;
-}
+void accept_fn(int fd, void* data);
 
-void wait(const Executor* executor, Frame* current) {
-    Frame* current = get_current_frame(executor);
-    Frame* next = move_to_next_ready_frame(executor);
-    swap_context(&current->exe, &next->exe);
-}
-
-ssize_t async_read(const Executor* executor, int fd, void* buffer, size_t size) {
-    Frame* frame = get_current_frame(executor);
-    request_read(executor->ioc, fd, buffer, size, read_cb, frame);
+static inline int async_accept(struct Executor* executor, int fd) {
+    struct Frame* frame = get_current_frame(executor);
+    request_accept(&executor->ioc, fd, &accept_fn, frame);
     wait(executor);
     return frame->result;
 }
 
-ssize_t async_write(const Executor* executor, int fd, void* buffer, size_t size) {
-    Frame* frame = get_current_frame(executor);
-    request_wrire(executor->ioc, fd, buffer, size, write_cb, frame);
+void read_fn(ssize_t length, void* data);
+
+static inline ssize_t async_read(struct Executor* executor, int fd, void* buffer, size_t size) {
+    struct Frame* frame = get_current_frame(executor);
+    request_read(&executor->ioc, fd, buffer, size, &read_fn, frame);
     wait(executor);
+    return frame->result;
 }
 
-Frame* main_frame(const Executor* executor) {
-    return executor->frames[0];
+void write_fn(ssize_t length, void* data);
+
+static inline ssize_t async_write(struct Executor* executor, int fd, void* buffer, size_t size) {
+    struct Frame* frame = get_current_frame(executor);
+    request_write(&executor->ioc, fd, buffer, size, &write_fn, frame);
+    wait(executor);
+    return frame->result;
 }
 
-void func_wrapper(fn, executor) {
-    fn(executor);
-    /*release context*/
-    swap_context(main_frame(executor)->exe, move_to_next_ready_frame(executor)->next/*if != main*/);
-    /*else return*/
-}
 
-void async_exec(const Executor* executor, void(*)(void) fn) {
-    Frame* frame = executor->frames[size++];
-    getcontext(&frame->exe);
-    frame->ctx.uc_stack.ss_sp = frame->stack;
-    frame->ctx.uc_stack.ss_size = sizeof(frame->stack);
-    frame->ctx.uc_link = &uctx_main;
-    makecontext(&frame->exe, fnc_wrapper, 2, fn, executor);
+void func_wrapper(Func fn, struct Executor* executor, void* data);
 
-    frame->is_ready= true;
-}
+void async_exec(struct Executor* executor, Func fn, void* data);
 
-void init(Executor* exe, count) {
-    memset(exe, 0, sizeof(*exe));
-    exe->size = align32pow2(count + 1);
-    exe->current = 0;
-    // inital datastructers
-    // init main frame
-}
+void init_executor(struct Executor* executor, size_t count);
 
-void run(Executor) {
-    while (true) {
-        swap_context(main_frame()->exe, move_to_next_ready_frame(executor)->exe/*if != main*/);
-        if (is_empty(executor))
-            return;
-        process(executor->ioc, 1024);
-    }
-}
+void run(struct Executor* executor);
 
 #ifdef __cplusplus
 }
