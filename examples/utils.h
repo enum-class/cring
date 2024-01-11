@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sched.h>
 
 int setup_listen(const char *addr, int port)
 {

@@ -19,6 +19,12 @@ void write_fn(ssize_t length, void *data)
     frame->is_ready = 1;
 }
 
+void wait_fn(void *data)
+{
+    struct Frame *frame = (struct Frame *)data;
+    frame->is_ready = 1;
+}
+
 void accept_fn(int fd, void *data)
 {
     struct Frame *frame = (struct Frame *)data;
@@ -55,16 +61,18 @@ void async_exec(struct Executor *executor, Func fn, void *data)
     frame->is_ready = 1;
 }
 
-void init_executor(struct Executor *executor, size_t count)
+void init_executor(struct Executor *executor, size_t count, size_t capacity)
 {
     memset(executor, 0, sizeof(*executor));
-    executor->capacity = count; //TODO: rte_align32pow2(count + 1);
+    executor->capacity = align32pow2(count + 1);
+    executor->frames =
+        (struct Frame **)malloc(sizeof(struct Frame *) * executor->capacity);
     executor->current = 0;
 
     executor->frames[0] = (struct Frame *)malloc(sizeof(struct Frame));
     executor->size = 1;
     executor->frames[0]->is_ready = 1;
-    init_io_context(&executor->ioc);
+    init_io_context(&executor->ioc, capacity);
 }
 
 void run(struct Executor *executor)
@@ -78,6 +86,6 @@ void run(struct Executor *executor)
 
         //TODO: if (is_empty(executor))
         //    return;
-        process(&executor->ioc, 1024);
+        process(&executor->ioc, BATCH_SIZE);
     }
 }

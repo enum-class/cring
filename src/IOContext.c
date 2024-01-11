@@ -1,18 +1,45 @@
 #include "IOContext.h"
 
+#include <stdlib.h>
 #include <string.h>
 
-void init_io_context(struct IOContext *ioc)
+void init_io_context(struct IOContext *ioc, size_t capacity)
 {
     memset(ioc, 0, sizeof(*ioc));
-    ioc->capacity = 1024;
-    ioc->tail = 1023;
-    for (int i = 0; i < 1024; i++)
+    ioc->capacity = align32pow2(capacity + 1);
+    ioc->tail = ioc->capacity - 1;
+
+    ioc->available_tokens =
+        (struct Token **)malloc(sizeof(struct Token *) * ioc->capacity);
+    ioc->tokens = (struct Token *)malloc(sizeof(struct Token) * ioc->capacity);
+
+    for (int i = 0; i < ioc->capacity; i++)
         ioc->available_tokens[i] = &ioc->tokens[i];
 
     struct io_uring_params params;
     memset(&params, 0, sizeof(params));
-    io_uring_queue_init_params(1024, &ioc->ring, &params);
+    io_uring_queue_init_params(ioc->capacity, &ioc->ring, &params);
+}
+
+int request_wait(struct IOContext *ioc, struct __kernel_timespec *ts,
+                 wait_cb cb, void *data)
+{
+    struct Token *token = get_token(ioc);
+    if (unlikely(token == NULL))
+        return -1;
+
+    struct io_uring_sqe *sqe = io_uring_get_sqe(&ioc->ring);
+    if (unlikely(sqe == NULL)) {
+        release_token(ioc, token);
+        return -1;
+    }
+
+    io_uring_prep_timeout(sqe, ts, 0, 0);
+    token->type = WAIT;
+    token->cb = (Cb)cb;
+    token->data = data;
+    io_uring_sqe_set_data(sqe, (void *)token);
+    return 1;
 }
 
 int request_accept(struct IOContext *ioc, int fd, accept_cb cb, void *data)
@@ -82,11 +109,11 @@ int request_write(struct IOContext *ioc, int fd, void *buffer, size_t size,
 
 int process(struct IOContext *ioc, size_t batch)
 {
-    static struct io_uring_cqe *cqes[1024];
+    static struct io_uring_cqe *cqes[MAX_BATCH_SIZE];
     if (!batch)
         return batch;
 
-    batch = batch > 1024 ? 1024 : batch;
+    batch = batch > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : batch;
     struct io_uring_cqe *cqe = NULL;
 
     io_uring_submit(&ioc->ring);
@@ -111,6 +138,9 @@ int process(struct IOContext *ioc, size_t batch)
             release_token(ioc, token);
         } else if (token->type == WRITE) {
             ((write_cb)token->cb)(cqe->res, token->data);
+            release_token(ioc, token);
+        } else if (token->type == WAIT) {
+            ((wait_cb)token->cb)(token->data);
             release_token(ioc, token);
         }
     }

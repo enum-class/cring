@@ -16,18 +16,16 @@ set(SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IOContext.c
 )
 
-find_package(Threads REQUIRED)
-
 add_library(libcring STATIC ${SOURCE_FILES})
 target_link_libraries(libcring PUBLIC
     uring
-    Threads::Threads
 )
+
 target_include_directories(libcring PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 
-option(CRING_BENCHMARK "Enable benchmarking" OFF)
+option(CRING_BENCHMARK "Enable benchmarking" ON)
 option(CRING_TEST "Enable tests" OFF)
 option(CRING_EXAMPLES "Enable examples" ON)
 

@@ -1,5 +1,11 @@
 set(PINGPONG_SOURCE_FILES
-    ping-pong.c
+    echo-server.c
 )
+
+find_package(Threads REQUIRED)
+
 add_executable(pingpong ${PINGPONG_SOURCE_FILES})
-target_link_libraries(pingpong PRIVATE libcring)
+target_link_libraries(pingpong PRIVATE
+    libcring
+    Threads::Threads
+)

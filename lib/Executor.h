@@ -10,12 +10,13 @@ extern "C" {
 #include "IOContext.h"
 
 #define STACK 8192
+#define BATCH_SIZE 1024
 
 struct Frame {
     ucontext_t exe;
     ssize_t result;
     int is_ready;
-    uint8_t stack[STACK];
+    uint8_t stack[STACK]; // TODO ?
 };
 
 struct Executor {
@@ -23,7 +24,7 @@ struct Executor {
     size_t size;
     size_t capacity;
     size_t current;
-    struct Frame *frames[10];
+    struct Frame **frames;
 };
 
 typedef void (*Func)(struct Executor *, void *);
@@ -56,6 +57,17 @@ static inline void wait(struct Executor *executor)
     current->is_ready = 0;
     struct Frame *next = move_to_next_ready_frame(executor);
     swapcontext(&current->exe, &next->exe);
+}
+
+void wait_fn(void *data);
+
+static inline void async_wait(struct Executor *executor,
+                              struct __kernel_timespec *ts)
+{
+    struct Frame *frame = get_current_frame(executor);
+    request_wait(&executor->ioc, ts, &wait_fn, frame);
+    wait(executor);
+    return;
 }
 
 void accept_fn(int fd, void *data);
@@ -94,7 +106,7 @@ void func_wrapper(Func fn, struct Executor *executor, void *data);
 
 void async_exec(struct Executor *executor, Func fn, void *data);
 
-void init_executor(struct Executor *executor, size_t count);
+void init_executor(struct Executor *executor, size_t count, size_t capacity);
 
 void run(struct Executor *executor);
 
