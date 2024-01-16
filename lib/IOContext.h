@@ -21,29 +21,38 @@ typedef void (*Cb)(void);
 
 enum RequestType { ACCEPT = 1, READ = 2, WRITE = 4, WAIT = 8 };
 
+// TODO: take care of cache
 struct Token {
     int fd;
     enum RequestType type;
 
-    //RTE_CACHE_GUARD;
     Cb cb;
     void *data;
 };
 
+// TODO: take care of cache
 struct IOContext {
     uint32_t tail;
     struct Token **available_tokens;
 
-    //RTE_CACHE_GUARD;
-
     uint32_t capacity;
     struct Token *tokens;
 
-    //RTE_CACHE_GUARD;
     struct io_uring ring;
 };
 
-void init_io_context(struct IOContext *ioc, size_t capacity);
+/**
+ * Initialize the IOContext structure with the specified capacity.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure to be initialized.
+ * @param capacity
+ *   The desired capacity for the IOContext, representing the maximum number
+ *   of tokens in the ring.
+ * @return
+ *   0 on success, -1 on failure.
+ */
+int init_io_context(struct IOContext *ioc, size_t capacity);
 
 static inline struct Token *get_token(struct IOContext *ioc)
 {

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -10,18 +9,14 @@
 
 #define PACKET_SIZE 1024
 
-int port = -1;
-char *address = NULL;
+int port = 40000;
+char *address = "127.0.0.1";
 int threads = 1;
 int connections = 1;
 int qps = -1;
 
 void pingpong_client(struct Executor *executor, void *data)
 {
-    struct __kernel_timespec ts;
-    ts.tv_sec = 1;
-    ts.tv_nsec = 0;
-
     int fd = connect_to_server(address, port);
     if (fd < 0) {
         fprintf(stderr, "Connection to server %s:%d intrrupted\n", address,
@@ -29,28 +24,32 @@ void pingpong_client(struct Executor *executor, void *data)
         return;
     }
 
-    srand(time(NULL));
     char buffer[PACKET_SIZE] = { 0 };
 
     int counter = 0;
     while (++counter <= 10) {
         ssize_t w_len = async_write(executor, fd, (void *)buffer, PACKET_SIZE);
-        if (w_len <= 0)
+        if (w_len <= 0) {
+            fprintf(stderr, "Error in sending message");
             break;
+        }
 
         ssize_t r_len = async_read(executor, fd, (void *)buffer, w_len);
-        if (r_len <= 0)
+        if (r_len <= 0) {
+            fprintf(stderr, "Error in reading message");
             break;
-
-        async_wait(executor, &ts);
+        }
     }
+
+    close(fd);
+    printf("Bye\n");
 }
 
-void *run_thread(void *)
+void *run_thread(void *data)
 {
     struct Executor executor;
     init_executor(&executor, 400, 1000);
-
+    printf("stating ...\n");
     for (int i = 0; i < connections; ++i)
         async_exec(&executor, &pingpong_client, &i);
 

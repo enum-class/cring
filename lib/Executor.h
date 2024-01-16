@@ -9,16 +9,17 @@ extern "C" {
 
 #include "IOContext.h"
 
-#define STACK 8192
+#define STACK_SIZE 8192
 #define BATCH_SIZE 1024
 
+// TODO: take care of cache
 struct Frame {
     ucontext_t exe;
     ssize_t result;
     int is_ready;
-    uint8_t stack[STACK]; // TODO ?
 };
 
+// TODO: take care of cache
 struct Executor {
     struct IOContext ioc;
     size_t size;
@@ -28,6 +29,11 @@ struct Executor {
 };
 
 typedef void (*Func)(struct Executor *, void *);
+
+static inline struct Frame *get_last_frame(struct Executor *executor)
+{
+    return executor->frames[executor->size - 1];
+}
 
 static inline struct Frame *get_current_frame(struct Executor *executor)
 {
@@ -51,7 +57,7 @@ static inline struct Frame *move_to_next_ready_frame(struct Executor *executor)
     return frame;
 }
 
-static inline void wait(struct Executor *executor)
+static inline void suspend_current_frame(struct Executor *executor)
 {
     struct Frame *current = get_current_frame(executor);
     current->is_ready = 0;
@@ -61,13 +67,15 @@ static inline void wait(struct Executor *executor)
 
 void wait_fn(void *data);
 
-static inline void async_wait(struct Executor *executor,
-                              struct __kernel_timespec *ts)
+static inline int async_wait(struct Executor *executor,
+                             struct __kernel_timespec *ts)
 {
     struct Frame *frame = get_current_frame(executor);
-    request_wait(&executor->ioc, ts, &wait_fn, frame);
-    wait(executor);
-    return;
+    int ret = request_wait(&executor->ioc, ts, &wait_fn, frame);
+    if (ret < 0)
+        return ret;
+    suspend_current_frame(executor);
+    return 0;
 }
 
 void accept_fn(int fd, void *data);
@@ -75,8 +83,10 @@ void accept_fn(int fd, void *data);
 static inline int async_accept(struct Executor *executor, int fd)
 {
     struct Frame *frame = get_current_frame(executor);
-    request_accept(&executor->ioc, fd, &accept_fn, frame);
-    wait(executor);
+    int ret = request_accept(&executor->ioc, fd, &accept_fn, frame);
+    if (ret < 0)
+        return ret;
+    suspend_current_frame(executor);
     return frame->result;
 }
 
@@ -86,8 +96,10 @@ static inline ssize_t async_read(struct Executor *executor, int fd,
                                  void *buffer, size_t size)
 {
     struct Frame *frame = get_current_frame(executor);
-    request_read(&executor->ioc, fd, buffer, size, &read_fn, frame);
-    wait(executor);
+    int ret = request_read(&executor->ioc, fd, buffer, size, &read_fn, frame);
+    if (ret < 0)
+        return ret;
+    suspend_current_frame(executor);
     return frame->result;
 }
 
@@ -97,16 +109,18 @@ static inline ssize_t async_write(struct Executor *executor, int fd,
                                   void *buffer, size_t size)
 {
     struct Frame *frame = get_current_frame(executor);
-    request_write(&executor->ioc, fd, buffer, size, &write_fn, frame);
-    wait(executor);
+    int ret = request_write(&executor->ioc, fd, buffer, size, &write_fn, frame);
+    if (ret < 0)
+        return ret;
+    suspend_current_frame(executor);
     return frame->result;
 }
 
 void func_wrapper(Func fn, struct Executor *executor, void *data);
 
-void async_exec(struct Executor *executor, Func fn, void *data);
+int async_exec(struct Executor *executor, Func fn, void *data);
 
-void init_executor(struct Executor *executor, size_t count, size_t capacity);
+int init_executor(struct Executor *executor, size_t count, size_t capacity);
 
 void run(struct Executor *executor);
 

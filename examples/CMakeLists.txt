@@ -1,11 +1,19 @@
-set(PINGPONG_SOURCE_FILES
-    echo-server.c
-)
-
 find_package(Threads REQUIRED)
 
-add_executable(pingpong ${PINGPONG_SOURCE_FILES})
-target_link_libraries(pingpong PRIVATE
+set(ECHO_CLIENT_SOURCES
+    echo-client.c
+)
+add_executable(echo-client ${ECHO_CLIENT_SOURCES})
+target_link_libraries(echo-client PRIVATE
+    libcring
+    Threads::Threads
+)
+
+set(ECHO_SERVER_SOURCES
+    echo-server.c
+)
+add_executable(echo-server ${ECHO_SERVER_SOURCES})
+target_link_libraries(echo-server PRIVATE
     libcring
     Threads::Threads
 )
