@@ -12,6 +12,7 @@
 
 void echo_client(struct Executor *executor, void *data)
 {
+    (void)data;
     int client_id = rand();
     printf("Client %d started ...\n", client_id);
     int fd = connect_to_server("127.0.0.1", 40000);
@@ -23,7 +24,7 @@ void echo_client(struct Executor *executor, void *data)
     char send_buffer[PACKET_SIZE] = { 0 };
     snprintf(send_buffer, sizeof(send_buffer), "Hello from client %d",
              client_id);
-    size_t length = strlen(send_buffer);
+    ssize_t length = strlen(send_buffer);
 
     ssize_t w_len = async_write(executor, fd, (void *)send_buffer, length);
     if (w_len != length) {
@@ -35,7 +36,7 @@ void echo_client(struct Executor *executor, void *data)
     }
 
     struct __kernel_timespec ts;
-    ts.tv_sec = 2;
+    ts.tv_sec = 1;
     ts.tv_nsec = 0;
     async_wait(executor, &ts);
 
@@ -53,7 +54,7 @@ void echo_client(struct Executor *executor, void *data)
     printf("Bye Bye %d\n", client_id);
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     struct Executor executor;
     init_executor(&executor, 400, 1000);

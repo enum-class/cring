@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-#include <liburing.h>
-
 #include <stdint.h>
+
+#include <liburing.h>
 
 #include "Common.h"
 
@@ -21,25 +21,34 @@ typedef void (*Cb)(void);
 
 enum RequestType { ACCEPT = 1, READ = 2, WRITE = 4, WAIT = 8 };
 
-// TODO: take care of cache
 struct Token {
     int fd;
     enum RequestType type;
-
     Cb cb;
     void *data;
-};
+} __attribute__((packed));
 
-// TODO: take care of cache
 struct IOContext {
     uint32_t tail;
-    struct Token **available_tokens;
+    struct io_uring ring;
 
     uint32_t capacity;
-    struct Token *tokens;
-
-    struct io_uring ring;
+    struct Token **available_tokens;
 };
+
+/**
+ * Free resources associated with the IOContext structure.
+ *
+ * This function releases resources allocated for the IOContext structure,
+ * including the io_uring ring and token arrays. It ensures proper cleanup
+ * to prevent memory leaks.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure whose resources need to be freed.
+ * @return
+ *   0 on success, -1 on failure.
+ */
+int free_io_context(struct IOContext *ioc);
 
 /**
  * Initialize the IOContext structure with the specified capacity.
@@ -54,6 +63,18 @@ struct IOContext {
  */
 int init_io_context(struct IOContext *ioc, size_t capacity);
 
+/**
+ * Get a token from the IOContext's available tokens.
+ *
+ * This function retrieves a token from the available tokens in the IOContext.
+ * Tokens are used as user_data, pass to sqe, and retrive in completion time.
+ * The function decreases the tail index to mark the token as in use.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure from which to get a token.
+ * @return
+ *   A pointer to the retrieved token on success, or NULL if no available tokens.
+ */
 static inline struct Token *get_token(struct IOContext *ioc)
 {
     if (likely(ioc->tail != 0)) {
@@ -65,22 +86,148 @@ static inline struct Token *get_token(struct IOContext *ioc)
     return NULL;
 }
 
+/**
+ * Release a token back to the IOContext's available tokens.
+ *
+ * This function releases a token back to the available tokens in the IOContext.
+ * The token becomes available for reuse, and the tail index is increased to
+ * reflect the updated available token count.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure to which the token will be released.
+ * @param token
+ *   A pointer to the token that needs to be released.
+ */
 static inline void release_token(struct IOContext *ioc, struct Token *token)
 {
-    if (unlikely(token == NULL || ioc->tail == ioc->capacity))
+    if (unlikely(token == NULL || ioc->tail == ioc->capacity)) {
+        LOG_ERROR("unexpected happened tail: %u, capacity: %u", ioc->tail,
+                  ioc->capacity);
         return;
+    }
 
     ++ioc->tail;
     ioc->available_tokens[ioc->tail] = token;
 }
 
+/**
+ * Initiate a wait request using io_uring for the specified duration.
+ *
+ * This function prepares a wait request using io_uring for the specified duration,
+ * associating it with a token and callback function. The token is acquired using
+ * the get_token function. If the token cannot be obtained, the function returns -1.
+ * The function sets up the necessary io_uring_sqe for the wait operation and assigns
+ * the provided callback function and data to the token.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure representing the io_uring context.
+ * @param ts
+ *   A pointer to the __kernel_timespec structure specifying the duration to wait.
+ * @param cb
+ *   A callback function to be executed when the wait operation completes.
+ * @param data
+ *   A pointer to user data to be passed to the callback function.
+ * @return
+ *   0 on success, -1 on failure. Returns -1 if a token cannot be obtained or if
+ *   there is an issue with io_uring_sqe setup.
+ */
 int request_wait(struct IOContext *ioc, struct __kernel_timespec *ts,
                  wait_cb cb, void *data);
+
+/**
+ * Initiate an accept request using io_uring for the specified file descriptor.
+ *
+ * This function prepares an accept request using io_uring for the specified file descriptor,
+ * associating it with a token and callback function. The token is acquired using the get_token
+ * function. If the token cannot be obtained, the function returns -1. The function sets up
+ * the necessary io_uring_sqe for the accept operation and assigns the provided callback function,
+ * file descriptor, and data to the token.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure representing the io_uring context.
+ * @param fd
+ *   The file descriptor for which the accept operation is initiated.
+ * @param cb
+ *   A callback function to be executed when the accept operation completes.
+ * @param data
+ *   A pointer to user data to be passed to the callback function.
+ * @return
+ *   0 on success, -1 on failure. Returns -1 if a token cannot be obtained or if
+ *   there is an issue with io_uring_sqe setup.
+ */
 int request_accept(struct IOContext *ioc, int fd, accept_cb cb, void *data);
+
+/**
+ * Initiate a read request using io_uring for the specified file descriptor.
+ *
+ * This function prepares a read request using io_uring for the specified file descriptor,
+ * associating it with a token and callback function. The token is acquired using the get_token
+ * function. If the token cannot be obtained, the function returns -1. The function sets up
+ * the necessary io_uring_sqe for the read operation and assigns the provided callback function,
+ * file descriptor, buffer, size, and data to the token.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure representing the io_uring context.
+ * @param fd
+ *   The file descriptor from which to read.
+ * @param buffer
+ *   A pointer to the buffer where the read data will be stored.
+ * @param size
+ *   The size of the buffer.
+ * @param cb
+ *   A callback function to be executed when the read operation completes.
+ * @param data
+ *   A pointer to user data to be passed to the callback function.
+ * @return
+ *   0 on success, -1 on failure. Returns -1 if a token cannot be obtained or if
+ *   there is an issue with io_uring_sqe setup.
+ */
 int request_read(struct IOContext *ioc, int fd, void *buffer, size_t size,
                  read_cb cb, void *data);
+
+/**
+ * Initiate a write request using io_uring for the specified file descriptor.
+ *
+ * This function prepares a write request using io_uring for the specified file descriptor,
+ * associating it with a token and callback function. The token is acquired using the get_token
+ * function. If the token cannot be obtained, the function returns -1. The function sets up
+ * the necessary io_uring_sqe for the write operation and assigns the provided callback function,
+ * file descriptor, buffer, size, and data to the token.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure representing the io_uring context.
+ * @param fd
+ *   The file descriptor to which data will be written.
+ * @param buffer
+ *   A pointer to the buffer containing the data to be written.
+ * @param size
+ *   The size of the data to be written.
+ * @param cb
+ *   A callback function to be executed when the write operation completes.
+ * @param data
+ *   A pointer to user data to be passed to the callback function.
+ * @return
+ *   0 on success, -1 on failure. Returns -1 if a token cannot be obtained or if
+ *   there is an issue with io_uring_sqe setup.
+ */
 int request_write(struct IOContext *ioc, int fd, void *buffer, size_t size,
                   write_cb cb, void *data);
+
+/**
+ * Process completion queue entries for the given IOContext.
+ *
+ * This function submits a batch of io-uring operations, processes completion
+ * queue entries, and invokes corresponding callback functions based on the type
+ * of associated tokens. It releases resources associated with the processed
+ * tokens to prevent memory leaks.
+ *
+ * @param ioc
+ *   A pointer to the IOContext structure representing the io-uring instance.
+ * @param batch
+ *   The size of the batch of operations to be processed, limited to MAX_BATCH_SIZE.
+ * @return
+ *   The number of processed entries on success, or an error code on failure.
+ */
 int process(struct IOContext *ioc, size_t batch);
 
 #ifdef __cplusplus

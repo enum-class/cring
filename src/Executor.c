@@ -32,47 +32,50 @@ void accept_fn(int fd, void *data)
     frame->is_ready = 1;
 }
 
-void func_wrapper(Func fn, struct Executor *executor, void *data)
+void execute(Func fn, struct Executor *executor, void *data)
 {
     fn(executor, data);
-    struct Frame *current = get_current_frame(executor);
-    current->is_ready = 0;
-
-    if (executor->frames[executor->size - 1] != current) {
-        struct Frame *tmp = executor->frames[executor->size - 1];
-        executor->frames[executor->size - 1] =
-            executor->frames[executor->current];
-        executor->frames[executor->current] = tmp;
-
-        --executor->size;
-
-        current = get_current_frame(executor);
-        if (current->is_ready) {
-            swapcontext(&executor->frames[executor->size]->exe, &current->exe);
-        } else {
-            struct Frame *next = move_to_next_ready_frame(executor);
-            if (next != main_frame(executor))
-                swapcontext(&executor->frames[executor->size]->exe, &next->exe);
-        }
-
-    } else {
-        --executor->size;
-    }
+    manage_async_finish(executor);
 }
 
 int async_exec(struct Executor *executor, Func fn, void *data)
 {
-    if (executor->size >= executor->capacity)
+    if (unlikely(executor->size >= executor->capacity)) {
+        LOG_ERROR("Reach frame capacity = %lu limit.\n", executor->capacity);
         return -1;
+    }
 
     struct Frame *frame = executor->frames[executor->size++];
-    if (!frame)
-        return -1;
     getcontext(&frame->exe);
-    makecontext(&frame->exe, (void (*)(void))func_wrapper, 3, fn, executor,
-                data);
+    makecontext(&frame->exe, (void (*)(void))execute, 3, fn, executor, data);
     frame->is_ready = 1;
 
+    return 0;
+}
+
+int free_executor(struct Executor *executor)
+{
+    if (!executor) {
+        LOG_ERROR("NULL executor\n");
+        return -1;
+    }
+
+    free_io_context(&executor->ioc);
+
+    if (!executor->frames) {
+        LOG_ERROR("uninitialized executor\n");
+        return -1;
+    }
+
+    if (executor->frames[0]->exe.uc_stack.ss_sp)
+        free(executor->frames[0]->exe.uc_stack.ss_sp);
+
+    for (size_t i = 0; i < executor->capacity; ++i)
+        if (executor->frames[i])
+            free(executor->frames[i]);
+
+    free(executor->frames);
+    memset(executor, 0, sizeof(*executor));
     return 0;
 }
 
@@ -82,11 +85,12 @@ int init_executor(struct Executor *executor, size_t count, size_t capacity)
     executor->capacity = align32pow2(count + 1);
     executor->frames =
         (struct Frame **)malloc(sizeof(struct Frame *) * executor->capacity);
+    uint8_t *stack_mem = (uint8_t *)malloc(executor->capacity * STACK_SIZE);
+    if (!stack_mem || !executor->frames)
+        LOG_ERROR("unable to allocate memory\n");
 
     struct Frame *frame = NULL;
-    uint8_t *stack_mem = (uint8_t *)malloc(executor->capacity * STACK_SIZE);
-
-    for (int i = 0; i < executor->capacity; ++i) {
+    for (size_t i = 0; i < executor->capacity; ++i) {
         executor->frames[i] = (struct Frame *)malloc(sizeof(struct Frame));
         executor->frames[i]->is_ready = 0;
         frame = executor->frames[i];
@@ -99,24 +103,40 @@ int init_executor(struct Executor *executor, size_t count, size_t capacity)
     executor->current = 0;
     executor->frames[0]->is_ready = 1;
 
-    if (init_io_context(&executor->ioc, capacity) < 0)
+    if (init_io_context(&executor->ioc, capacity) < 0) {
+        LOG_ERROR("error in io context init");
         return -1;
+    }
 
     return 0;
 }
 
 void run(struct Executor *executor)
 {
+    if (!executor) {
+        LOG_ERROR("NULL executor\n");
+        return;
+    }
+
+    struct Frame *current = NULL;
+    struct Frame *next = NULL;
+    int ret = 0;
+
     while (1) {
-        struct Frame *current = get_current_frame(executor);
-        struct Frame *next = move_to_next_ready_frame(executor);
+        current = get_current_frame(executor);
+        next = move_to_next_ready_frame(executor);
+
         if (next != current) {
             swapcontext(&current->exe, &next->exe);
         }
 
-        if (executor->size < 2)
+        if (executor->size <= 1)
             break;
 
-        process(&executor->ioc, BATCH_SIZE);
+        ret = process(&executor->ioc, BATCH_SIZE);
+        if (unlikely(ret < 0)) {
+            LOG_ERROR("io context process returned %d.\n", ret);
+            break;
+        }
     }
 }

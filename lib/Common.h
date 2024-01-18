@@ -6,13 +6,28 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdio.h>
+
+#ifdef NDEBUG
+#define LOG_DEBUG(format, ...)
+#else
+#define LOG_DEBUG(format, ...)                                          \
+    do {                                                                \
+        fprintf(stdout, "[DEBUG %s] " format, __func__, ##__VA_ARGS__); \
+    } while (0)
+#endif
+
+#define LOG_ERROR(format, ...)                                          \
+    do {                                                                \
+        fprintf(stderr, "[ERROR %s] " format, __func__, ##__VA_ARGS__); \
+    } while (0)
 
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #define likely(x) __builtin_expect(!!(x), 1)
 
 static inline uint64_t align64pow2(uint64_t v)
 {
-    v--;
+    --v;
     v |= v >> 1;
     v |= v >> 2;
     v |= v >> 4;
@@ -25,7 +40,7 @@ static inline uint64_t align64pow2(uint64_t v)
 
 static inline uint32_t align32pow2(uint32_t x)
 {
-    x--;
+    --x;
     x |= x >> 1;
     x |= x >> 2;
     x |= x >> 4;

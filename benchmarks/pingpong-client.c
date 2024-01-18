@@ -8,6 +8,7 @@
 #include "utils.h"
 
 #define PACKET_SIZE 1024
+#define MESSAGES_COUNT 150
 
 int port = 40000;
 char *address = "127.0.0.1";
@@ -17,6 +18,7 @@ int qps = -1;
 
 void pingpong_client(struct Executor *executor, void *data)
 {
+    (void)data;
     int fd = connect_to_server(address, port);
     if (fd < 0) {
         fprintf(stderr, "Connection to server %s:%d intrrupted\n", address,
@@ -27,26 +29,26 @@ void pingpong_client(struct Executor *executor, void *data)
     char buffer[PACKET_SIZE] = { 0 };
 
     int counter = 0;
-    while (++counter <= 10) {
+    while (++counter <= MESSAGES_COUNT) {
         ssize_t w_len = async_write(executor, fd, (void *)buffer, PACKET_SIZE);
         if (w_len <= 0) {
-            fprintf(stderr, "Error in sending message");
+            fprintf(stderr, "Error in sending message %zd\n", w_len);
             break;
         }
 
         ssize_t r_len = async_read(executor, fd, (void *)buffer, w_len);
         if (r_len <= 0) {
-            fprintf(stderr, "Error in reading message");
+            fprintf(stderr, "Error in reading message %zd\n", r_len);
             break;
         }
     }
 
     close(fd);
-    printf("Bye\n");
 }
 
 void *run_thread(void *data)
 {
+    (void)data;
     struct Executor executor;
     init_executor(&executor, 400, 1000);
     printf("stating ...\n");
@@ -54,6 +56,8 @@ void *run_thread(void *data)
         async_exec(&executor, &pingpong_client, &i);
 
     run(&executor);
+
+    free_executor(&executor);
     pthread_exit(NULL);
 }
 
@@ -75,7 +79,8 @@ int main(int argc, char *argv[])
             connections = atoi(optarg);
             break;
         case 'q':
-            qps = atoi(optarg);
+            printf("QPS not supported");
+            // TODO: qps = atoi(optarg);
             break;
         default:
             fprintf(
@@ -90,13 +95,27 @@ int main(int argc, char *argv[])
     if (thread_holder == NULL)
         exit(EXIT_FAILURE);
 
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
     for (int t = 0; t < threads; ++t)
         pthread_create(&thread_holder[t], NULL, &run_thread, NULL);
 
     for (int t = 0; t < threads; ++t)
         pthread_join(thread_holder[t], NULL);
 
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double elapsed_time =
+        (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+
     free(thread_holder);
+
+    printf("Real QPS: %.4f\n",
+           ((double)threads * (double)connections * MESSAGES_COUNT) /
+               elapsed_time);
+    printf("AVG RTT: %.4f us\n",
+           elapsed_time * 1e6 /
+               ((double)threads * (double)connections * MESSAGES_COUNT));
 
     return 0;
 }

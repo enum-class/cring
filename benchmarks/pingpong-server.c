@@ -34,12 +34,19 @@ void client_handler(struct Executor *executor, void *data)
 
     while (true) {
         ssize_t r_len = async_read(executor, fd, (void *)buffer, PACKET_SIZE);
-        if (r_len <= 0)
+        if (r_len <= 0) {
+            fprintf(stderr, "Error in reading message %zd\n", r_len);
             break;
+        }
+
         ssize_t w_len = async_write(executor, fd, (void *)buffer, r_len);
-        if (w_len != r_len)
+        if (w_len != r_len) {
+            fprintf(stderr, "Error in sending message %zd\n", w_len);
             break;
+        }
     }
+
+    close(fd);
 }
 
 void pingpong_server(struct Executor *executor, void *data)
@@ -59,6 +66,7 @@ void *init_server(void *data)
     init_executor(&executor, FRAME_COUNT, RING_SIZE);
     async_exec(&executor, &pingpong_server, &server_fd);
     run(&executor);
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
@@ -69,7 +77,7 @@ int main(int argc, char *argv[])
     int threads_no = 1;
 
     int opt;
-    while ((opt = getopt(argc, argv, "p:a:c:")) != -1) {
+    while ((opt = getopt(argc, argv, "p:a:c:t:")) != -1) {
         switch (opt) {
         case 'p':
             port = atoi(optarg);
