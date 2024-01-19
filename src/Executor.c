@@ -70,9 +70,8 @@ int free_executor(struct Executor *executor)
     if (executor->frames[0]->exe.uc_stack.ss_sp)
         free(executor->frames[0]->exe.uc_stack.ss_sp);
 
-    for (size_t i = 0; i < executor->capacity; ++i)
-        if (executor->frames[i])
-            free(executor->frames[i]);
+    if (executor->frames[0])
+        free(executor->frames[0]);
 
     free(executor->frames);
     memset(executor, 0, sizeof(*executor));
@@ -81,19 +80,35 @@ int free_executor(struct Executor *executor)
 
 int init_executor(struct Executor *executor, size_t count, size_t capacity)
 {
+    if (!executor || !count) {
+        LOG_ERROR("Invalid input parameters");
+        return -1;
+    }
+
     memset(executor, 0, sizeof(*executor));
     executor->capacity = align32pow2(count + 1);
+
     executor->frames =
-        (struct Frame **)malloc(sizeof(struct Frame *) * executor->capacity);
-    uint8_t *stack_mem = (uint8_t *)malloc(executor->capacity * STACK_SIZE);
-    if (!stack_mem || !executor->frames)
+        (struct Frame **)calloc(executor->capacity, sizeof(struct Frame *));
+    uint8_t *stack_mem = (uint8_t *)calloc(executor->capacity, STACK_SIZE);
+    struct Frame *frame_mem =
+        (struct Frame *)calloc(executor->capacity, sizeof(struct Frame));
+    if (!stack_mem || !executor->frames || !frame_mem) {
         LOG_ERROR("unable to allocate memory\n");
+        if (stack_mem)
+            free(stack_mem);
+        if (executor->frames)
+            free(executor->frames);
+        if (frame_mem)
+            free(frame_mem);
+        return -1;
+    }
 
     struct Frame *frame = NULL;
     for (size_t i = 0; i < executor->capacity; ++i) {
-        executor->frames[i] = (struct Frame *)malloc(sizeof(struct Frame));
-        executor->frames[i]->is_ready = 0;
+        executor->frames[i] = &frame_mem[i];
         frame = executor->frames[i];
+        frame->is_ready = 0;
         frame->exe.uc_stack.ss_sp = &stack_mem[i * STACK_SIZE];
         frame->exe.uc_stack.ss_size = STACK_SIZE;
         frame->exe.uc_link = &main_frame(executor)->exe;
@@ -101,7 +116,15 @@ int init_executor(struct Executor *executor, size_t count, size_t capacity)
 
     executor->size = 1;
     executor->current = 0;
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
     executor->frames[0]->is_ready = 1;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
     if (init_io_context(&executor->ioc, capacity) < 0) {
         LOG_ERROR("error in io context init");

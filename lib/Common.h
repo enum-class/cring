@@ -17,9 +17,9 @@ extern "C" {
     } while (0)
 #endif
 
-#define LOG_ERROR(format, ...)                                          \
-    do {                                                                \
-        fprintf(stderr, "[ERROR %s] " format, __func__, ##__VA_ARGS__); \
+#define LOG_ERROR(format, ...)                                                \
+    do {                                                                      \
+        (void)fprintf(stderr, "[ERROR %s] " format, __func__, ##__VA_ARGS__); \
     } while (0)
 
 #define unlikely(x) __builtin_expect(!!(x), 0)

@@ -78,11 +78,12 @@ int init_io_context(struct IOContext *ioc, size_t capacity);
 static inline struct Token *get_token(struct IOContext *ioc)
 {
     if (likely(ioc->tail != 0)) {
-        struct Token *token = ioc->available_tokens[ioc->tail];
-        --ioc->tail;
+        struct Token *token = ioc->available_tokens[--ioc->tail];
         return token;
     }
 
+    LOG_DEBUG("Run out of tokens. tail: %u, capacity: %u\n", ioc->tail,
+              ioc->capacity);
     return NULL;
 }
 
@@ -101,13 +102,13 @@ static inline struct Token *get_token(struct IOContext *ioc)
 static inline void release_token(struct IOContext *ioc, struct Token *token)
 {
     if (unlikely(token == NULL || ioc->tail == ioc->capacity)) {
-        LOG_ERROR("unexpected happened tail: %u, capacity: %u", ioc->tail,
+        LOG_DEBUG("tokens bag gets full. tail: %u, capacity: %u\n", ioc->tail,
                   ioc->capacity);
         return;
     }
 
-    ++ioc->tail;
     ioc->available_tokens[ioc->tail] = token;
+    ++ioc->tail;
 }
 
 /**

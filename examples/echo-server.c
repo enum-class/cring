@@ -31,7 +31,7 @@ void client_handler(struct Executor *executor, void *data)
     close(fd);
 }
 
-void pingpong_server(struct Executor *executor, void *data)
+void echo_server(struct Executor *executor, void *data)
 {
     printf("Started ...\n");
     while (true) {
@@ -50,7 +50,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    async_exec(&executor, &pingpong_server, &server_fd);
+    async_exec(&executor, &echo_server, &server_fd);
 
     run(&executor);
     return 0;

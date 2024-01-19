@@ -26,15 +26,20 @@ int init_io_context(struct IOContext *ioc, size_t capacity)
 
     memset(ioc, 0, sizeof(*ioc));
     ioc->capacity = align32pow2(capacity + 1);
-    ioc->tail = ioc->capacity - 1;
+    ioc->tail = ioc->capacity;
 
     ioc->available_tokens =
-        (struct Token **)malloc(sizeof(struct Token *) * ioc->capacity);
+        (struct Token **)calloc(ioc->capacity, sizeof(struct Token *));
     struct Token *tokens =
-        (struct Token *)malloc(sizeof(struct Token) * ioc->capacity);
+        (struct Token *)calloc(ioc->capacity, sizeof(struct Token));
 
-    if (!tokens || !ioc->available_tokens)
+    if (!tokens || !ioc->available_tokens) {
+        if (tokens)
+            free(tokens);
+        if (ioc->available_tokens)
+            free(ioc->available_tokens);
         return -1;
+    }
 
     for (uint32_t i = 0; i < ioc->capacity; ++i)
         ioc->available_tokens[i] = &tokens[i];
