@@ -12,12 +12,44 @@ extern "C" {
 #define STACK_SIZE 8192
 #define BATCH_SIZE 1024
 
+/**
+ * @struct Frame
+ * @brief Represents a frame or context for a task or coroutine in the Cring library.
+ *
+ * The Frame structure encapsulates the essential components needed for managing
+ * the state and execution of an individual asynchronous task or coroutine.
+ *
+ * - `ucontext_t exe`: Execution context associated with the task, including the program
+ *    counter, stack pointer, and register values.
+ * - `ssize_t result`: Result or status of the execution of the associated task.
+ * - `int is_ready`: Flag indicating whether the task is ready for execution or has completed.
+ *
+ * This structure is integral to the asynchronous programming model in Cring, providing
+ * a container for the context and result of individual tasks within the event loop.
+ */
 struct Frame {
     ucontext_t exe;
     ssize_t result;
     int is_ready;
 };
 
+/**
+ * @struct Executor
+ * @brief Represents the executor for managing asynchronous tasks in the Cring library.
+ *
+ * The Executor structure holds information about the execution context, the current
+ * task being processed, the total number of tasks, the maximum capacity of tasks,
+ * and an array of Frame pointers representing individual tasks or coroutines.
+ *
+ * - `struct IOContext ioc`: The IOContext associated with the executor for managing I/O operations.
+ * - `size_t current`: Index of the currently active task in the executor.
+ * - `size_t size`: Current number of tasks scheduled in the executor.
+ * - `size_t capacity`: Maximum number of tasks the executor can handle.
+ * - `struct Frame **frames`: Dynamic array of Frame pointers representing individual tasks.
+ *
+ * This structure plays a crucial role in orchestrating and managing the asynchronous
+ * execution of tasks within the Cring event loop.
+ */
 struct Executor {
     struct IOContext ioc;
     size_t current;

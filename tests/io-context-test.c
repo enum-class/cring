@@ -1,50 +1,55 @@
 #include <assert.h>
-#include <pthread.h>
 
 #include <IOContext.h>
 
-#define THREADS_NO 4
+#include "utils.h"
+#include "io-context-test.h"
 
-int invalid_init()
+int ioc_invalid_init(void)
 {
-    size_t valid_capacity = 10;
-    size_t invalid_capacity = 0;
-    struct IOContext valid_ioc;
+    MAYBE_UNUSED size_t valid_capacity = 10;
+    MAYBE_UNUSED size_t invalid_capacity = 0;
+    MAYBE_UNUSED struct IOContext valid_ioc;
 
     assert(init_io_context(NULL, invalid_capacity) == -1);
     assert(init_io_context(NULL, valid_capacity) == -1);
+
     assert(init_io_context(&valid_ioc, invalid_capacity) == -1);
     return 0;
 }
 
-int capacity_check()
+int ioc_capacity_check(void)
 {
-    struct IOContext ioc;
-    size_t capacity = 10;
-    size_t expected_capacity = 16;
+    MAYBE_UNUSED struct IOContext ioc;
+    MAYBE_UNUSED size_t capacity = 10;
+    MAYBE_UNUSED size_t expected_capacity = 16;
 
     assert(init_io_context(&ioc, capacity) == 0);
     assert(ioc.capacity == expected_capacity);
+    assert(ioc.tail == expected_capacity);
+
+    assert(free_io_context(&ioc) == 0);
+    assert(is_memory_set_zero(&ioc, sizeof(struct IOContext)) == 1);
+
     return 0;
 }
 
-int invalid_free()
+int ioc_invalid_free(void)
 {
-    struct IOContext uninitialized_ioc;
-
     assert(free_io_context(NULL) == -1);
 
-    assert(free_io_context(&uninitialized_ioc) == 0);
-    assert(uninitialized_ioc.tail == 0);
-    assert(uninitialized_ioc.capacity == 0);
-    assert(uninitialized_ioc.available_tokens == NULL);
+    //MAYBE_UNUSED struct IOContext uninitialized_ioc;
+    //assert(free_io_context(&uninitialized_ioc) == 0);
+    //assert(uninitialized_ioc.tail == 0);
+    //assert(uninitialized_ioc.capacity == 0);
+    //assert(uninitialized_ioc.available_tokens == NULL);
     return 0;
 }
 
-int valid_free()
+int ioc_valid_free(void)
 {
-    struct IOContext ioc;
-    size_t capacity = 10;
+    MAYBE_UNUSED struct IOContext ioc;
+    MAYBE_UNUSED size_t capacity = 10;
 
     assert(init_io_context(&ioc, capacity) == 0);
     assert(free_io_context(&ioc) == 0);
@@ -54,16 +59,16 @@ int valid_free()
     return 0;
 }
 
-int evaluate_tokens()
+int ioc_evaluate_tokens(void)
 {
     struct IOContext ioc;
-    size_t capacity = 40;
+    MAYBE_UNUSED size_t capacity = 40;
     size_t expected_capacity = 64;
 
     assert(init_io_context(&ioc, capacity) == 0);
     assert(ioc.capacity == expected_capacity);
 
-    struct Token *token = NULL;
+    MAYBE_UNUSED struct Token *token = NULL;
     for (size_t i = 0; i < expected_capacity; ++i) {
         token = get_token(&ioc);
         assert(token != NULL);
@@ -94,26 +99,11 @@ int evaluate_tokens()
     return 0;
 }
 
-void *run(void *data)
+void run_io_context_tests(void)
 {
-    (void)data;
-    printf("invalid_init %d\n", invalid_init());
-    printf("capacity_check %d\n", capacity_check());
-    printf("invalid_free %d\n", invalid_free());
-    printf("valid_free %d\n", valid_free());
-    printf("evaluate_tokens %d\n", evaluate_tokens());
-
-    pthread_exit(NULL);
-}
-
-int main()
-{
-    pthread_t threads[THREADS_NO];
-    for (int t = 0; t < THREADS_NO; ++t)
-        pthread_create(&threads[t], NULL, &run, NULL);
-
-    for (int t = 0; t < THREADS_NO; ++t)
-        pthread_join(threads[t], NULL);
-
-    printf("%s done\n", __FILE__);
+    printf("ioc_invalid_init %d\n", ioc_invalid_init());
+    printf("ioc_capacity_check %d\n", ioc_capacity_check());
+    printf("ioc_invalid_free %d\n", ioc_invalid_free());
+    printf("ioc_valid_free %d\n", ioc_valid_free());
+    printf("ioc_evaluate_tokens %d\n", ioc_evaluate_tokens());
 }

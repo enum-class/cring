@@ -60,10 +60,9 @@ int free_executor(struct Executor *executor)
         return -1;
     }
 
-    free_io_context(&executor->ioc);
-
     if (!executor->frames) {
         LOG_ERROR("uninitialized executor\n");
+        memset(executor, 0, sizeof(*executor));
         return -1;
     }
 
@@ -74,6 +73,8 @@ int free_executor(struct Executor *executor)
         free(executor->frames[0]);
 
     free(executor->frames);
+    free_io_context(&executor->ioc);
+
     memset(executor, 0, sizeof(*executor));
     return 0;
 }
@@ -81,11 +82,17 @@ int free_executor(struct Executor *executor)
 int init_executor(struct Executor *executor, size_t count, size_t capacity)
 {
     if (!executor || !count) {
-        LOG_ERROR("Invalid input parameters");
+        LOG_ERROR("Invalid input parameters\n");
         return -1;
     }
 
     memset(executor, 0, sizeof(*executor));
+
+    if (init_io_context(&executor->ioc, capacity) < 0) {
+        LOG_ERROR("error in io context init\n");
+        return -1;
+    }
+
     executor->capacity = align32pow2(count + 1);
 
     executor->frames =
@@ -97,8 +104,6 @@ int init_executor(struct Executor *executor, size_t count, size_t capacity)
         LOG_ERROR("unable to allocate memory\n");
         if (stack_mem)
             free(stack_mem);
-        if (executor->frames)
-            free(executor->frames);
         if (frame_mem)
             free(frame_mem);
         return -1;
@@ -116,20 +121,7 @@ int init_executor(struct Executor *executor, size_t count, size_t capacity)
 
     executor->size = 1;
     executor->current = 0;
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
     executor->frames[0]->is_ready = 1;
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-    if (init_io_context(&executor->ioc, capacity) < 0) {
-        LOG_ERROR("error in io context init");
-        return -1;
-    }
 
     return 0;
 }

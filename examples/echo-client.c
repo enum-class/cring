@@ -54,7 +54,7 @@ void echo_client(struct Executor *executor, void *data)
     printf("Bye Bye %d\n", client_id);
 }
 
-int main()
+int main(void)
 {
     struct Executor executor;
     init_executor(&executor, 400, 1000);

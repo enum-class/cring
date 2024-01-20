@@ -1,10 +1,13 @@
 find_package(Threads REQUIRED)
 
-set(IOCONTEXT_TESTS_SOURCES
+set(TESTS_SOURCES
+    main-test.c
     io-context-test.c
+    executor-test.c
 )
-add_executable(io-context-test ${IOCONTEXT_TESTS_SOURCES})
-target_link_libraries(io-context-test PRIVATE
+
+add_executable(run_test ${TESTS_SOURCES})
+target_link_libraries(run_test PRIVATE
     libcring
     Threads::Threads
 )

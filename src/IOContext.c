@@ -15,7 +15,7 @@ int free_io_context(struct IOContext *ioc)
     if (ioc->available_tokens)
         free(ioc->available_tokens);
 
-    memset(ioc, 0, sizeof(*ioc));
+    memset(ioc, 0, sizeof(struct IOContext));
     return 0;
 }
 

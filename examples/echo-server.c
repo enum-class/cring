@@ -40,7 +40,7 @@ void echo_server(struct Executor *executor, void *data)
     }
 }
 
-int main()
+int main(void)
 {
     int server_fd = setup_listen("127.0.0.1", 40000);
 
