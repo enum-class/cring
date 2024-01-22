@@ -3,6 +3,7 @@ find_package(Threads REQUIRED)
 set(TESTS_SOURCES
     main-test.c
     io-context-test.c
+    io-context-integration-test.c
     executor-test.c
 )
 

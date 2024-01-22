@@ -2,8 +2,8 @@
 
 #include <IOContext.h>
 
-#include "utils.h"
 #include "io-context-test.h"
+#include "utils.h"
 
 int ioc_invalid_init(void)
 {
@@ -37,12 +37,6 @@ int ioc_capacity_check(void)
 int ioc_invalid_free(void)
 {
     assert(free_io_context(NULL) == -1);
-
-    //MAYBE_UNUSED struct IOContext uninitialized_ioc;
-    //assert(free_io_context(&uninitialized_ioc) == 0);
-    //assert(uninitialized_ioc.tail == 0);
-    //assert(uninitialized_ioc.capacity == 0);
-    //assert(uninitialized_ioc.available_tokens == NULL);
     return 0;
 }
 

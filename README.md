@@ -64,7 +64,7 @@ Before building Cring, ensure that you have the following prerequisites installe
 ```
 - Optional: Customize the build by adding CMake options. For example, to enable benchmarking, tests, and examples, run:
 ```bash
-    cmake -B Release -DCRING_BENCHMARK=ON -DCRING_TEST=ON -DCRING_EXAMPLES=ON .
+    cmake -B Release -DCRING_BENCHMARK=ON -DCRING_TESTS=ON -DCRING_EXAMPLES=ON .
 ```
 
 3. build

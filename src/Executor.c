@@ -46,7 +46,6 @@ int async_exec(struct Executor *executor, Func fn, void *data)
     }
 
     struct Frame *frame = executor->frames[executor->size++];
-    getcontext(&frame->exe);
     makecontext(&frame->exe, (void (*)(void))execute, 3, fn, executor, data);
     frame->is_ready = 1;
 
@@ -114,6 +113,8 @@ int init_executor(struct Executor *executor, size_t count, size_t capacity)
         executor->frames[i] = &frame_mem[i];
         frame = executor->frames[i];
         frame->is_ready = 0;
+
+        getcontext(&frame->exe);
         frame->exe.uc_stack.ss_sp = &stack_mem[i * STACK_SIZE];
         frame->exe.uc_stack.ss_size = STACK_SIZE;
         frame->exe.uc_link = &main_frame(executor)->exe;

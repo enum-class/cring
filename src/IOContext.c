@@ -146,7 +146,7 @@ int request_write(struct IOContext *ioc, int fd, void *buffer, size_t size,
 
 int process(struct IOContext *ioc, size_t batch)
 {
-    static struct io_uring_cqe *cqes[MAX_BATCH_SIZE];
+    static __thread struct io_uring_cqe *cqes[MAX_BATCH_SIZE];
     if (unlikely(batch == 0))
         return batch;
 

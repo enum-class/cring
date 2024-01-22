@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "io-context-test.h"
+#include "io-context-integration-test.h"
 #include "executor-test.h"
 #include "utils.h"
 
@@ -23,5 +24,6 @@ int main(void)
     for (int t = 0; t < THREADS_NO; ++t)
         pthread_join(threads[t], NULL);
 
+    run_io_context_integeration_tests();
     printf("%s done\n", __FILE__);
 }

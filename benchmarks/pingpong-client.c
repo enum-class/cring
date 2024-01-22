@@ -8,7 +8,7 @@
 #include "utils.h"
 
 #define PACKET_SIZE 1024
-#define MESSAGES_COUNT 150
+#define MESSAGES_COUNT 1500000
 
 int port = 40000;
 char *address = "127.0.0.1";
