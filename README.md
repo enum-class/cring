@@ -1,8 +1,10 @@
 # Cring
 
-Cring is a lightweight and efficient event loop library written in pure C, designed to simplify asynchronous programming using the io-uring interface. It provides a clean and straightforward API for building scalable network applications.
+Cring is a lightweight and efficient event loop library written in pure C, designed to simplify asynchronous programming
+using the `io-uring` interface. Leveraging the power of user-level context switching with `ucontext`, It provides a clean and straightforward API for building scalable network applications.
+By incorporating ucontext, Cring facilitates the seamless execution of asynchronous tasks, enhancing the overall efficiency of the event-driven paradigm.
 
-Moreover, Cring is designed with a thread-per-core model in mind.
+Moreover, Cring is designed with a thread-per-core model in mind, emphasizing optimal resource utilization and parallelism.
 
 ## Features
 
@@ -51,6 +53,7 @@ Before building Cring, ensure that you have the following prerequisites installe
 - Linux 5.6 or newer (support io_uring)
 - CMake (version 3.16 or higher)
 - A C compiler that supports C11 (e.g., GCC or Clang)
+- liburing-dev
 
 ## Building Cring
 
@@ -75,6 +78,10 @@ Before building Cring, ensure that you have the following prerequisites installe
 ```bash
    cmake --build Release --target clang-tidy-check
 ```
+
 ## Benchmark
-## Tests
-## Licence
+
+Cring is designed for optimal performance, and we provide a 
+comprehensive suite of benchmarks to evaluate its efficiency. For 
+detailed benchmark results and instructions on running specific 
+tests, please refer to the [Benchmark](benchmark) folder.

@@ -1,0 +1,6 @@
+<map id="Executor" name="Executor">
+<area shape="rect" id="node1" title="Represents the executor for managing asynchronous tasks in the Cring library." alt="" coords="80,184,159,211"/>
+<area shape="rect" id="node2" href="$structIOContext.html" title=" " alt="" coords="5,95,92,121"/>
+<area shape="rect" id="node3" href="$structToken.html" title=" " alt="" coords="19,5,78,32"/>
+<area shape="rect" id="node4" href="$structFrame.html" title="Represents a frame or context for a task or coroutine in the Cring library." alt="" coords="116,95,179,121"/>
+</map>
