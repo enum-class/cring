@@ -54,7 +54,6 @@ struct Executor {
     struct IOContext ioc;
     size_t current;
     size_t size;
-
     size_t capacity;
     struct Frame **frames;
 };

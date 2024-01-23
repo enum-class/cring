@@ -69,6 +69,9 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
+<p>Represents a token associated with an asynchronous operation in Cring.  
+ <a href="structToken.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="IOContext_8h_source.html">IOContext.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -82,7 +85,17 @@ Data Fields</h2></td></tr>
 <tr class="memitem:ae884e57b58008a19fd4080e93f8f4beb"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structToken.html#ae884e57b58008a19fd4080e93f8f4beb">data</a></td></tr>
 <tr class="separator:ae884e57b58008a19fd4080e93f8f4beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents a token associated with an asynchronous operation in Cring. </p>
+<p>The <a class="el" href="structToken.html" title="Represents a token associated with an asynchronous operation in Cring.">Token</a> structure encapsulates information about an asynchronous task, providing a convenient way to pass relevant data within the Cring library.</p>
+<ul>
+<li><code>int fd</code>: File descriptor associated with the asynchronous task.</li>
+<li><code>enum RequestType type</code>: Type of asynchronous request, defining the nature of the operation (e.g., ACCEPT, READ, WRITE, WAIT).</li>
+<li><code>Cb cb</code>: Callback function to be executed upon completion of the asynchronous task.</li>
+<li><code>void *data</code>: Additional data associated with the task, providing flexibility for user-specific information.</li>
+</ul>
+<p>The structure is packed to ensure minimal memory overhead. Users can leverage <a class="el" href="structToken.html" title="Represents a token associated with an asynchronous operation in Cring.">Token</a> instances when interacting with the Cring library to handle asynchronous tasks. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a id="a65ffd443d2cbc57fcf3492a3dd48c56c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a65ffd443d2cbc57fcf3492a3dd48c56c">&#9670;&nbsp;</a></span>cb</h2>
 

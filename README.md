@@ -84,4 +84,4 @@ Before building Cring, ensure that you have the following prerequisites installe
 Cring is designed for optimal performance, and we provide a 
 comprehensive suite of benchmarks to evaluate its efficiency. For 
 detailed benchmark results and instructions on running specific 
-tests, please refer to the [Benchmark](benchmark) folder.
+tests, please refer to the [Benchmark](benchmarks) folder.

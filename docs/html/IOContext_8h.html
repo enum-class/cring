@@ -118,8 +118,10 @@ This graph shows which files directly or indirectly include this file:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structToken.html">Token</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents a token associated with an asynchronous operation in Cring.  <a href="structToken.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structIOContext.html">IOContext</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents the I/O context for asynchronous operations in Cring.  <a href="structIOContext.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -147,6 +149,7 @@ Enumerations</h2></td></tr>
 , <a class="el" href="IOContext_8h.html#ae10b07f2d0feb103db7fe4cfd192e5afa61aa7ff70b76bff0fda378cf61d6afbc">WRITE</a> = 4
 , <a class="el" href="IOContext_8h.html#ae10b07f2d0feb103db7fe4cfd192e5afa79a322ccb4b29b85b3cab52dbccefd17">WAIT</a> = 8
  }</td></tr>
+<tr class="memdesc:ae10b07f2d0feb103db7fe4cfd192e5af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration defining different types of asynchronous requests in Cring.  <a href="IOContext_8h.html#ae10b07f2d0feb103db7fe4cfd192e5af">More...</a><br /></td></tr>
 <tr class="separator:ae10b07f2d0feb103db7fe4cfd192e5af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
@@ -283,6 +286,15 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Enumeration defining different types of asynchronous requests in Cring. </p>
+<p>The RequestType enum provides distinct values for various asynchronous operations, allowing the Cring library to differentiate between different types of tasks.</p>
+<ul>
+<li><code>ACCEPT (1)</code>: Represents an asynchronous accept operation, typically used for handling new incoming connections.</li>
+<li><code>READ (2)</code>: Represents an asynchronous read operation, used for reading data from a file descriptor or socket.</li>
+<li><code>WRITE (4)</code>: Represents an asynchronous write operation, used for writing data to a file descriptor or socket.</li>
+<li><code>WAIT (8)</code>: Represents a wait operation, indicating a task that waits for a specific condition or event to occur. </li>
+</ul>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae10b07f2d0feb103db7fe4cfd192e5afa5707b7b8bf1b098d620552e9576d8061"></a>ACCEPT&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae10b07f2d0feb103db7fe4cfd192e5afacb9be765f361bb7efb9073730aac92c6"></a>READ&#160;</td><td class="fielddoc"></td></tr>
@@ -326,11 +338,11 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Free resources associated with the <a class="el" href="structIOContext.html">IOContext</a> structure.</p>
-<p>This function releases resources allocated for the <a class="el" href="structIOContext.html">IOContext</a> structure, including the io_uring ring and token arrays. It ensures proper cleanup to prevent memory leaks.</p>
+<p>Free resources associated with the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure.</p>
+<p>This function releases resources allocated for the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure, including the io_uring ring and token arrays. It ensures proper cleanup to prevent memory leaks.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure whose resources need to be freed. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure whose resources need to be freed. </td></tr>
   </table>
   </dd>
 </dl>
@@ -361,11 +373,11 @@ Variables</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Get a token from the <a class="el" href="structIOContext.html">IOContext</a>'s available tokens.</p>
-<p>This function retrieves a token from the available tokens in the <a class="el" href="structIOContext.html">IOContext</a>. Tokens are used as user_data, pass to sqe, and retrive in completion time. The function decreases the tail index to mark the token as in use.</p>
+<p>Get a token from the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a>'s available tokens.</p>
+<p>This function retrieves a token from the available tokens in the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a>. Tokens are used as user_data, pass to sqe, and retrive in completion time. The function decreases the tail index to mark the token as in use.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure from which to get a token. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure from which to get a token. </td></tr>
   </table>
   </dd>
 </dl>
@@ -398,11 +410,11 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initialize the <a class="el" href="structIOContext.html">IOContext</a> structure with the specified capacity.</p>
+<p>Initialize the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure with the specified capacity.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure to be initialized. </td></tr>
-    <tr><td class="paramname">capacity</td><td>The desired capacity for the <a class="el" href="structIOContext.html">IOContext</a>, representing the maximum number of tokens in the ring. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure to be initialized. </td></tr>
+    <tr><td class="paramname">capacity</td><td>The desired capacity for the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a>, representing the maximum number of tokens in the ring. </td></tr>
   </table>
   </dd>
 </dl>
@@ -435,11 +447,11 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Process completion queue entries for the given <a class="el" href="structIOContext.html">IOContext</a>.</p>
+<p>Process completion queue entries for the given <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a>.</p>
 <p>This function submits a batch of io-uring operations, processes completion queue entries, and invokes corresponding callback functions based on the type of associated tokens. It releases resources associated with the processed tokens to prevent memory leaks.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure representing the io-uring instance. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure representing the io-uring instance. </td></tr>
     <tr><td class="paramname">batch</td><td>The size of the batch of operations to be processed, limited to MAX_BATCH_SIZE. </td></tr>
   </table>
   </dd>
@@ -481,11 +493,11 @@ Variables</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Release a token back to the <a class="el" href="structIOContext.html">IOContext</a>'s available tokens.</p>
-<p>This function releases a token back to the available tokens in the <a class="el" href="structIOContext.html">IOContext</a>. The token becomes available for reuse, and the tail index is increased to reflect the updated available token count.</p>
+<p>Release a token back to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a>'s available tokens.</p>
+<p>This function releases a token back to the available tokens in the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a>. The token becomes available for reuse, and the tail index is increased to reflect the updated available token count.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure to which the token will be released. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure to which the token will be released. </td></tr>
     <tr><td class="paramname">token</td><td>A pointer to the token that needs to be released. </td></tr>
   </table>
   </dd>
@@ -534,7 +546,7 @@ Variables</h2></td></tr>
 <p>This function prepares an accept request using io_uring for the specified file descriptor, associating it with a token and callback function. The token is acquired using the get_token function. If the token cannot be obtained, the function returns -1. The function sets up the necessary io_uring_sqe for the accept operation and assigns the provided callback function, file descriptor, and data to the token.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure representing the io_uring context. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure representing the io_uring context. </td></tr>
     <tr><td class="paramname">fd</td><td>The file descriptor for which the accept operation is initiated. </td></tr>
     <tr><td class="paramname">cb</td><td>A callback function to be executed when the accept operation completes. </td></tr>
     <tr><td class="paramname">data</td><td>A pointer to user data to be passed to the callback function. </td></tr>
@@ -598,7 +610,7 @@ Variables</h2></td></tr>
 <p>This function prepares a read request using io_uring for the specified file descriptor, associating it with a token and callback function. The token is acquired using the get_token function. If the token cannot be obtained, the function returns -1. The function sets up the necessary io_uring_sqe for the read operation and assigns the provided callback function, file descriptor, buffer, size, and data to the token.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure representing the io_uring context. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure representing the io_uring context. </td></tr>
     <tr><td class="paramname">fd</td><td>The file descriptor from which to read. </td></tr>
     <tr><td class="paramname">buffer</td><td>A pointer to the buffer where the read data will be stored. </td></tr>
     <tr><td class="paramname">size</td><td>The size of the buffer. </td></tr>
@@ -652,7 +664,7 @@ Variables</h2></td></tr>
 <p>This function prepares a wait request using io_uring for the specified duration, associating it with a token and callback function. The token is acquired using the get_token function. If the token cannot be obtained, the function returns -1. The function sets up the necessary io_uring_sqe for the wait operation and assigns the provided callback function and data to the token.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure representing the io_uring context. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure representing the io_uring context. </td></tr>
     <tr><td class="paramname">ts</td><td>A pointer to the __kernel_timespec structure specifying the duration to wait. </td></tr>
     <tr><td class="paramname">cb</td><td>A callback function to be executed when the wait operation completes. </td></tr>
     <tr><td class="paramname">data</td><td>A pointer to user data to be passed to the callback function. </td></tr>
@@ -716,7 +728,7 @@ Variables</h2></td></tr>
 <p>This function prepares a write request using io_uring for the specified file descriptor, associating it with a token and callback function. The token is acquired using the get_token function. If the token cannot be obtained, the function returns -1. The function sets up the necessary io_uring_sqe for the write operation and assigns the provided callback function, file descriptor, buffer, size, and data to the token.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html">IOContext</a> structure representing the io_uring context. </td></tr>
+    <tr><td class="paramname">ioc</td><td>A pointer to the <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure representing the io_uring context. </td></tr>
     <tr><td class="paramname">fd</td><td>The file descriptor to which data will be written. </td></tr>
     <tr><td class="paramname">buffer</td><td>A pointer to the buffer containing the data to be written. </td></tr>
     <tr><td class="paramname">size</td><td>The size of the data to be written. </td></tr>

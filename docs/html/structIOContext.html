@@ -69,14 +69,17 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
+<p>Represents the I/O context for asynchronous operations in Cring.  
+ <a href="structIOContext.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="IOContext_8h_source.html">IOContext.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for IOContext:</div>
 <div class="dyncontent">
 <div class="center"><img src="structIOContext__coll__graph.png" border="0" usemap="#aIOContext_coll__map" alt="Collaboration graph"/></div>
 <map name="aIOContext_coll__map" id="aIOContext_coll__map">
-<area shape="rect" title=" " alt="" coords="5,95,92,121"/>
-<area shape="rect" href="structToken.html" title=" " alt="" coords="19,5,78,32"/>
+<area shape="rect" title="Represents the I/O context for asynchronous operations in Cring." alt="" coords="5,95,92,121"/>
+<area shape="rect" href="structToken.html" title="Represents a token associated with an asynchronous operation in Cring." alt="" coords="19,5,78,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -91,7 +94,17 @@ Data Fields</h2></td></tr>
 <tr class="memitem:a25ae55419ed66e3f0c7174aa55be0703"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structToken.html">Token</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structIOContext.html#a25ae55419ed66e3f0c7174aa55be0703">available_tokens</a></td></tr>
 <tr class="separator:a25ae55419ed66e3f0c7174aa55be0703"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents the I/O context for asynchronous operations in Cring. </p>
+<p>The <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure manages the underlying io_uring instance and additional information required for handling asynchronous I/O operations.</p>
+<ul>
+<li><code>uint32_t tail</code>: Tail index used in the circular buffer of the io_uring instance.</li>
+<li><code>struct io_uring ring</code>: The io_uring instance responsible for managing I/O operations.</li>
+<li><code>uint32_t capacity</code>: Maximum capacity of the circular buffer in the io_uring instance.</li>
+<li><code>struct <a class="el" href="structToken.html" title="Represents a token associated with an asynchronous operation in Cring.">Token</a> **available_tokens</code>: Array of pointers to available <a class="el" href="structToken.html" title="Represents a token associated with an asynchronous operation in Cring.">Token</a> instances, used for associating tasks with I/O operations.</li>
+</ul>
+<p>The <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> structure provides a central component for handling I/O operations within the Cring library. Users interact with this structure when scheduling and managing asynchronous tasks in the event loop. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a id="a25ae55419ed66e3f0c7174aa55be0703"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a25ae55419ed66e3f0c7174aa55be0703">&#9670;&nbsp;</a></span>available_tokens</h2>
 

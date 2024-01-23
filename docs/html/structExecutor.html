@@ -79,8 +79,8 @@ Collaboration diagram for Executor:</div>
 <div class="center"><img src="structExecutor__coll__graph.png" border="0" usemap="#aExecutor_coll__map" alt="Collaboration graph"/></div>
 <map name="aExecutor_coll__map" id="aExecutor_coll__map">
 <area shape="rect" title="Represents the executor for managing asynchronous tasks in the Cring library." alt="" coords="80,184,159,211"/>
-<area shape="rect" href="structIOContext.html" title=" " alt="" coords="5,95,92,121"/>
-<area shape="rect" href="structToken.html" title=" " alt="" coords="19,5,78,32"/>
+<area shape="rect" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring." alt="" coords="5,95,92,121"/>
+<area shape="rect" href="structToken.html" title="Represents a token associated with an asynchronous operation in Cring." alt="" coords="19,5,78,32"/>
 <area shape="rect" href="structFrame.html" title="Represents a frame or context for a task or coroutine in the Cring library." alt="" coords="116,95,179,121"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
@@ -102,7 +102,7 @@ Data Fields</h2></td></tr>
 <div class="textblock"><p>Represents the executor for managing asynchronous tasks in the Cring library. </p>
 <p>The <a class="el" href="structExecutor.html" title="Represents the executor for managing asynchronous tasks in the Cring library.">Executor</a> structure holds information about the execution context, the current task being processed, the total number of tasks, the maximum capacity of tasks, and an array of <a class="el" href="structFrame.html" title="Represents a frame or context for a task or coroutine in the Cring library.">Frame</a> pointers representing individual tasks or coroutines.</p>
 <ul>
-<li><code>struct <a class="el" href="structIOContext.html">IOContext</a> ioc</code>: The <a class="el" href="structIOContext.html">IOContext</a> associated with the executor for managing I/O operations.</li>
+<li><code>struct <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> ioc</code>: The <a class="el" href="structIOContext.html" title="Represents the I/O context for asynchronous operations in Cring.">IOContext</a> associated with the executor for managing I/O operations.</li>
 <li><code>size_t current</code>: Index of the currently active task in the executor.</li>
 <li><code>size_t size</code>: Current number of tasks scheduled in the executor.</li>
 <li><code>size_t capacity</code>: Maximum number of tasks the executor can handle.</li>

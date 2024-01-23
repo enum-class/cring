@@ -19,8 +19,41 @@ typedef void (*read_cb)(ssize_t /*read length*/, void * /*data*/);
 typedef void (*write_cb)(ssize_t /*write length*/, void * /*data*/);
 typedef void (*Cb)(void);
 
+/**
+ * @enum RequestType
+ * @brief Enumeration defining different types of asynchronous requests in Cring.
+ *
+ * The RequestType enum provides distinct values for various asynchronous operations,
+ * allowing the Cring library to differentiate between different types of tasks.
+ *
+ * - `ACCEPT (1)`: Represents an asynchronous accept operation, typically used for
+ *   handling new incoming connections.
+ * - `READ (2)`: Represents an asynchronous read operation, used for reading data
+ *   from a file descriptor or socket.
+ * - `WRITE (4)`: Represents an asynchronous write operation, used for writing data
+ *   to a file descriptor or socket.
+ * - `WAIT (8)`: Represents a wait operation, indicating a task that waits for a specific
+ *   condition or event to occur.
+ */
 enum RequestType { ACCEPT = 1, READ = 2, WRITE = 4, WAIT = 8 };
 
+/**
+ * @struct Token
+ * @brief Represents a token associated with an asynchronous operation in Cring.
+ *
+ * The Token structure encapsulates information about an asynchronous task,
+ * providing a convenient way to pass relevant data within the Cring library.
+ *
+ * - `int fd`: File descriptor associated with the asynchronous task.
+ * - `enum RequestType type`: Type of asynchronous request, defining the nature
+ *    of the operation (e.g., ACCEPT, READ, WRITE, WAIT).
+ * - `Cb cb`: Callback function to be executed upon completion of the asynchronous task.
+ * - `void *data`: Additional data associated with the task, providing flexibility
+ *    for user-specific information.
+ *
+ * The structure is packed to ensure minimal memory overhead. Users can leverage
+ * Token instances when interacting with the Cring library to handle asynchronous tasks.
+ */
 struct Token {
     int fd;
     enum RequestType type;
@@ -28,10 +61,26 @@ struct Token {
     void *data;
 } __attribute__((packed));
 
+/**
+ * @struct IOContext
+ * @brief Represents the I/O context for asynchronous operations in Cring.
+ *
+ * The IOContext structure manages the underlying io_uring instance and
+ * additional information required for handling asynchronous I/O operations.
+ *
+ * - `uint32_t tail`: Tail index used in the circular buffer of the io_uring instance.
+ * - `struct io_uring ring`: The io_uring instance responsible for managing I/O operations.
+ * - `uint32_t capacity`: Maximum capacity of the circular buffer in the io_uring instance.
+ * - `struct Token **available_tokens`: Array of pointers to available Token instances,
+ *    used for associating tasks with I/O operations.
+ *
+ * The IOContext structure provides a central component for handling I/O operations
+ * within the Cring library. Users interact with this structure when scheduling and
+ * managing asynchronous tasks in the event loop.
+ */
 struct IOContext {
     uint32_t tail;
     struct io_uring ring;
-
     uint32_t capacity;
     struct Token **available_tokens;
 };
