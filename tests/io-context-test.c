@@ -78,13 +78,13 @@ int ioc_evaluate_tokens(void)
     assert(ioc.tail == 0);
 
     for (size_t i = 0; i < expected_capacity; ++i) {
-        release_token(&ioc, ioc.available_tokens[i]);
+        assert((release_token(&ioc, ioc.available_tokens[i]), 1));
     }
 
     assert(ioc.tail == expected_capacity);
 
     for (size_t i = 0; i < expected_capacity; ++i) {
-        release_token(&ioc, ioc.available_tokens[i]);
+        assert((release_token(&ioc, ioc.available_tokens[i]), 1));
     }
 
     assert(ioc.tail == expected_capacity);
