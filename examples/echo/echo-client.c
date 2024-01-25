@@ -63,4 +63,5 @@ int main(void)
         async_exec(&executor, &echo_client, NULL);
 
     run(&executor);
+    free_executor(&executor);
 }

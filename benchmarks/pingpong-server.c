@@ -66,6 +66,7 @@ void *init_server(void *data)
     init_executor(&executor, FRAME_COUNT, RING_SIZE);
     async_exec(&executor, &pingpong_server, &server_fd);
     run(&executor);
+    free_executor(&executor);
     pthread_exit(NULL);
 }
 
